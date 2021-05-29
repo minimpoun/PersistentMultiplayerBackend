@@ -10,6 +10,11 @@
   },
   "compileOnSave": true,
   "include": [
-    "src"
-  ]
+    "src",
+    "src/@types"
+  ],
+  "typeRoots": [
+    "./@types",
+    "./node_modules/@types",
+  ] 
 }
