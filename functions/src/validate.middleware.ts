@@ -3,9 +3,9 @@ import * as functions from "firebase-functions";
 import { NextFunction, Request, Response } from "express";
 
 const validateUser = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
+    req: Request,
+    res: Response,
+    next: NextFunction
 ): Promise<void> => {
   if (
     !req.headers.authorization ||
