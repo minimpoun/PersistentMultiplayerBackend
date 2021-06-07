@@ -42,18 +42,18 @@ type UpdateRequest = {
 };
 
 const createCharacter = async (
-    req: CreateRequest,
-    res: Response
+  req: CreateRequest,
+  res: Response
 ): Promise<void> => {
   const { name } = req.body;
 
   try {
     const user = db.collection("users").doc(req.user.uid);
     await user.set(
-        {
-          timeChanged: Date.now(),
-        },
-        { merge: true }
+      {
+        timeChanged: Date.now(),
+      },
+      { merge: true }
     );
 
     const character = user.collection("characters").doc();
@@ -76,18 +76,18 @@ const createCharacter = async (
 };
 
 const getAllCharacters = async (
-    req: GetAllCharactersRequest,
-    res: Response
+  req: GetAllCharactersRequest,
+  res: Response
 ): Promise<void> => {
   const { uid } = req.user;
   const user = await db
-      .collection("users")
-      .doc(uid)
-      .collection("characters")
-      .get();
+    .collection("users")
+    .doc(uid)
+    .collection("characters")
+    .get();
   const characters = user.docs.map((doc) => {
     const data = doc.data();
-    return { ...data, id: doc.id };
+    return { data: { ...data }, id: doc.id };
   });
   res.status(200).send(characters);
 };
@@ -96,27 +96,27 @@ const getCharacter = async (req: GetRequest, res: Response): Promise<void> => {
   const { id } = req.body;
   const { uid } = req.user;
   const character = await db
-      .collection("users")
-      .doc(uid)
-      .collection("characters")
-      .doc(id)
-      .get();
+    .collection("users")
+    .doc(uid)
+    .collection("characters")
+    .doc(id)
+    .get();
   res.status(200).send(character.data());
 };
 
 const updateInventory = async (
-    req: UpdateRequest,
-    res: Response
+  req: UpdateRequest,
+  res: Response
 ): Promise<void> => {
   const { id, newItem } = req.body;
   const { uid } = req.user;
   let character;
   try {
     character = db
-        .collection("users")
-        .doc(uid)
-        .collection("characters")
-        .doc(id);
+      .collection("users")
+      .doc(uid)
+      .collection("characters")
+      .doc(id);
   } catch {
     res.status(500).send({ error: "failed to get character" });
   }
