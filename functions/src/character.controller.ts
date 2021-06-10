@@ -14,7 +14,7 @@ type GetAllCharactersRequest = {
 
 type GetRequest = {
   body: {
-    id: string;
+    iD: string;
   };
   user: admin.auth.DecodedIdToken;
 };
@@ -29,6 +29,13 @@ type UpdateRequest = {
   };
   user: admin.auth.DecodedIdToken;
 };
+
+type DeleteRequest = {
+  body: {
+    id: string;
+  };
+  user: admin.auth.DecodedIdToken;
+}
 
 const createCharacter = async (
     req: CreateRequest,
@@ -57,7 +64,7 @@ const createCharacter = async (
     res.status(201).send({
       status: "created",
       message: "Created new character",
-      data: userObject,
+      data: { ...userObject, id: character.id },
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -82,6 +89,18 @@ const getAllCharacters = async (
 };
 
 const getCharacter = async (req: GetRequest, res: Response): Promise<void> => {
+  const { iD } = req.body;
+  const { uid } = req.user;
+  const character = await db
+      .collection("users")
+      .doc(uid)
+      .collection("characters")
+      .doc(iD)
+      .get();
+  res.status(200).send({ ...character.data(), id: iD });
+};
+
+const deleteCharacter = async (req: DeleteRequest, res: Response): Promise<void> => {
   const { id } = req.body;
   const { uid } = req.user;
   const character = await db
@@ -89,8 +108,8 @@ const getCharacter = async (req: GetRequest, res: Response): Promise<void> => {
       .doc(uid)
       .collection("characters")
       .doc(id)
-      .get();
-  res.status(200).send(character.data());
+      .delete();
+  res.status(200).send({ message: "deleted character", data: character });
 };
 
 const updateInventory = async (
@@ -136,13 +155,22 @@ const updateInventory = async (
       res.status(404).send({ error: "Not Found" });
       return;
     }
-    await character.update({
+
+    for (let i = 0; i < outputData.inventory.length; i++) {
+      if (outputData.inventory[i].itemId === newItem.itemId) {
+        newItem.itemCount += outputData.inventory[i].itemCount;
+      }
+    }
+
+    await character.set({
       inventory: admin.firestore.FieldValue.arrayUnion(newItem),
+      level: outputData.level,
+      name: outputData.name,
     });
-    res.status(200).send({ message: "Updated Inventory" });
+    res.status(200).send({ message: "Updated Inventory", data: outputData.inventory });
   } catch {
-    res.status(500).send({ error: "failed to update inventory" });
+    res.status(500).send({ error: "failed to update inventory", data: [] });
   }
 };
 
-export { createCharacter, getAllCharacters, getCharacter, updateInventory };
+export { createCharacter, getAllCharacters, getCharacter, updateInventory, deleteCharacter };
